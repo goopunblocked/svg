@@ -1,9 +1,0 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI</title><link rel="stylesheet" href="chat.css"><link rel="stylesheet" href="../ui/feedback.css"><script defer src="../ui/feedback.js"></script></head>
-<body><main>
-  <header><label>Assistant <select id="model"></select></label><button type="button" id="clear">New chat</button></header>
-  <div id="log" role="log" aria-label="Conversation" aria-live="off"></div>
-  <footer><p id="status" role="status"></p>
-    <form id="composer"><label class="sr-only" for="message">Message</label><textarea id="message" required maxlength="4000" rows="2" placeholder="Ask a question…" autocomplete="off"></textarea><button id="send">Send</button><button id="stop" type="button" hidden>Stop</button></form>
-  </footer>
-</main><script type="module" src="chat.js"></script></body></html>
