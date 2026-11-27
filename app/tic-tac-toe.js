@@ -1,7 +1,0 @@
-window.goopPrograms["game-tic-tac-toe"] = function(root, signal) {
-const find = id => root.querySelector('#'+id);
-let cells=Array(9).fill(''),turn='X',end=false;const b=find('board'),msg=find('info');function reset(){cells.fill('');turn='X';end=false;msg.textContent='Your turn: X';draw()}function draw(){try{localStorage.setItem('goop-save:game-tic-tac-toe',JSON.stringify({cells,turn,end,message:msg.textContent}));}catch{}b.replaceChildren();cells.forEach((v,i)=>{const el=document.createElement('button');el.textContent=v;el.style.cssText='height:90px;font-size:38px';el.onclick=()=>play(i);b.append(el)})}function play(i){if(cells[i]||end)return;cells[i]=turn;const win=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(x=>x.every(j=>cells[j]===turn));if(win){msg.textContent=turn+' wins!';end=true}else if(cells.every(Boolean)){msg.textContent='Draw!';end=true}else{turn=turn==='X'?'O':'X';msg.textContent='Your turn: '+turn}draw()}try{const saved=JSON.parse(localStorage.getItem('goop-save:game-tic-tac-toe'));
-if(saved?.cells?.length===9&&saved.cells.every(c=>['','X','O'].includes(c))&&['X','O'].includes(saved.turn)&&typeof saved.end==='boolean'){cells=saved.cells;turn=saved.turn;end=saved.end;msg.textContent=String(saved.message||'').slice(0,50);}}catch{}draw();
-root.querySelector('[data-game-reset]').onclick=reset;
-
-};
