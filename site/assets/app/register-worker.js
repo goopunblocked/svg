@@ -1,0 +1,4 @@
+
+if ('serviceWorker' in navigator && window.isSecureContext && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
+}
