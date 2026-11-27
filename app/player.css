@@ -1,0 +1,38 @@
+#goopPage[hidden],#webContent[hidden],.webPane[hidden],.gameActions[hidden],#recents[hidden],#favorites[hidden],#universalResults[hidden]{display:none!important}
+#tabStrip{margin-inline-start:var(--goop-nav-width,178px);background:#0b1b12;color:#e4f2e6;padding:5px 10px;display:flex;align-items:center;gap:5px;overflow-x:auto;font:13px system-ui;position:relative;z-index:5}
+#tabStrip button,.gameActions button,#playerDialog button,#webContent button{font:inherit;color:#d8ecdf;background:#142a1d;border:1px solid #395644;border-radius:7px;padding:6px 10px;cursor:pointer}
+#tabStrip button[aria-pressed="true"]{border-color:#8acc99;color:white}
+#webTabButtons{display:flex;min-width:0;gap:5px;overflow-x:auto}
+#webTabButtons>span{display:inline-flex;flex:none;gap:1px;align-items:stretch;white-space:nowrap}
+#newWebTab{flex:none;white-space:nowrap}
+#tabStrip .tabClose{min-width:32px;min-height:32px;line-height:1}
+@media (pointer:coarse){#tabStrip .tabClose{min-width:44px;min-height:44px}}
+#webTabButtons button:first-child{max-width:160px;overflow:hidden;text-overflow:ellipsis}
+#webContent{margin-inline-start:var(--goop-nav-width,178px);color:#e4f2e6;background:#09150f;font:14px system-ui}
+.webPane{min-height:0;height:calc(100dvh - 44px);display:flex;flex-direction:column}
+.webPane [data-part="browserStage"]{flex:1;display:flex;min-height:0}
+.webPane iframe{width:100%;height:100%;border:0}
+.webPane form,.webPane [data-part="connectionPanel"]:not([hidden]){display:flex;gap:5px;padding:7px;align-items:center;flex-wrap:wrap}
+.webPane [data-part="urlInput"]{flex:1;min-width:10em}
+.webPane input,.webPane select,#playerDialog input,#playerDialog select,#playerDialog textarea{color:#e4f2e6;background:#0e2117;border:1px solid #43614d;border-radius:5px;padding:7px}
+.webPane a{color:#b8e7c0}
+.webPane [data-part="status"]{padding:6px}
+.gameActions,.shelf{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:8px 0}
+#playerDialog{max-width:min(420px,94vw);color:#dceee2;background:#102117;border:1px solid #45614a;border-radius:12px;padding:20px;font:15px system-ui}
+#playerDialog::backdrop{background:#0009}
+#playerDialog label{display:grid;gap:5px;margin:.7em 0}
+#playerDialog form{float:right;margin-left:15px}
+#playerDialog h2{font-size:19px}
+#universalResults{display:grid;gap:5px;background:#0d2014;border:1px solid #344e3b;padding:9px;border-radius:9px;max-height:240px;overflow:auto}
+#universalResults strong{margin-right:8px}
+#universalResults button{font:inherit;padding:4px 8px;margin:2px}
+.goop-game-player.hidden{display:none!important}.goop-game-stage{height:min(65vh,650px)}.goop-game-stage iframe{width:100%;height:100%;border:0}
+#playerDialog button:focus-visible,#tabStrip button:focus-visible{outline:2px solid #9addaa}
+body.webFocused #goopMoviePanel,body.webFocused #goopMangaPanel{visibility:hidden}
+
+#goopPage > [hidden]{display:none!important}
+
+.webPane [data-part="youtubeLogin"][hidden]{display:none!important}
+.webPane .accountHandoff{margin:auto;max-width:28rem;padding:24px;line-height:1.5}
+.webPane .accountHandoff h2{font-size:1.2rem}
+.webPane .accountHandoff a,.webPane [data-part="youtubeLogin"]{display:inline-block;padding:7px 10px;border:1px solid #45654d;border-radius:6px}
