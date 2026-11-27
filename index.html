@@ -697,11 +697,6 @@ body[data-page="ai"] #goopPage main { grid-template-columns: minmax(0, 1fr); }
 body.webFocused #goopMoviePanel,body.webFocused #goopMangaPanel{visibility:hidden}
 
 #goopPage > [hidden]{display:none!important}
-
-.webPane [data-part="youtubeLogin"][hidden]{display:none!important}
-.webPane .accountHandoff{margin:auto;max-width:28rem;padding:24px;line-height:1.5}
-.webPane .accountHandoff h2{font-size:1.2rem}
-.webPane .accountHandoff a,.webPane [data-part="youtubeLogin"]{display:inline-block;padding:7px 10px;border:1px solid #45654d;border-radius:6px}
 </style></head><body>
 <aside id="sideNavigation"><h2>My Stuff</h2><nav id="goopNav" aria-label="Goop navigation"><a href="" data-goop-section="home" aria-current="page">Home</a><a href="#games" data-goop-section="games">Games</a><a href="#movies" data-goop-section="movies">Movies</a><a href="#music" data-goop-section="music">Music</a><a href="#manga" data-goop-section="manga">Manga</a><a href="#blox" data-goop-section="blox">GoopBlox</a><a href="#ai" data-goop-section="ai">AI</a><a href="#chat" data-goop-section="chat">Chat</a><a href="#settings" data-goop-section="settings">Settings</a></nav></aside>
 <div id="tabStrip" aria-label="Open tabs"><span id="webTabButtons"></span><button type="button" id="newWebTab" aria-label="New browser tab">+ Tab</button></div><div id="webContent" hidden></div><div id="goopPage">
@@ -8941,7 +8936,7 @@ body.webFocused #goopMoviePanel,body.webFocused #goopMangaPanel{visibility:hidde
 <div class="shell"><header class="top"><div class="brand" id="brandHome" role="button" tabindex="0"><img class="goop-brand-avatar" src="data:image/jpeg;base64,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" alt=""> Goop</div><div class="topright"><button class="btn" id="homeBtn">Home</button><button class="btn" id="settingsBtn">Settings</button><img class="goop-pfp" src="data:image/jpeg;base64,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" alt="Goop profile picture" title="Goop profile"></div></header>
 <main class="home" id="home"><div class="glowmark">G</div><h1 class="matrix-title" data-text="Goop">Goop</h1><form class="searchrow" id="homeSearchForm"><input aria-label="Search the web" autocomplete="off" id="homeSearch" placeholder="Search anything or paste a link"><button class="btn primary" type="submit">Search</button></form><div id="universalResults" aria-label="Goop search suggestions" hidden></div><div class="sectionheading"><h2>Bookmarks</h2><button class="btn smallbtn" id="addBookmark">Add bookmark</button></div><div class="bookmarks" id="bookmarks"><div class="bookmark"><button type="button" class="bookmark-name" data-bookmark-url="https://google.com">Google</button></div><div class="bookmark"><button type="button" class="bookmark-name" data-bookmark-url="https://youtube.com">YouTube</button></div><div class="bookmark"><button type="button" class="bookmark-name" data-bookmark-url="https://github.com">GitHub</button></div></div><section id="recents" hidden><h2>Continue playing</h2><div class="shelf"></div></section><section id="favorites" hidden><h2>Favorite games</h2><div class="shelf"></div></section><div class="sectionheading"><h2>My Stuff</h2></div><div class="grid" id="categories"><button type="button" class="tile" data-goop-section="games"><span class="name">Games</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="movies"><span class="name">Movies</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="music"><span class="name">Music</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="manga"><span class="name">Manga</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="blox"><span class="name">GoopBlox</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="ai"><span class="name">AI</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="chat"><span class="name">Chat</span><span class="tile-arrow">›</span></button><button type="button" class="tile" data-goop-section="settings"><span class="name">Settings</span><span class="tile-arrow">›</span></button></div></main>
 <template id="webTemplate"><section class="webPane" aria-label="Goop browser">
-<form data-part="browserSearchForm" class="browserbar"><button class="btn" data-part="backBtn" type="button" aria-label="Back" title="Back">←</button><button class="btn" data-part="forwardBtn" type="button" aria-label="Forward" title="Forward">→</button><button class="btn" data-part="reloadBtn" type="button" aria-label="Reload" title="Reload">↻</button><a class="btn" data-part="browserHome" href="">Home</a><input aria-label="Search or enter a URL" data-part="urlInput" type="text" autocomplete="off" placeholder="Search or enter a URL"><button class="btn primary" type="submit" data-part="goBtn">Go</button><button class="btn" type="button" data-part="saveBookmark">Save</button><a data-part="youtubeLogin" class="btn" target="_blank" rel="noopener noreferrer" hidden>Sign in on YouTube</a><button class="btn" type="button" data-part="browserConnection" aria-expanded="false" >Connection</button></form>
+<form data-part="browserSearchForm" class="browserbar"><button class="btn" data-part="backBtn" type="button" aria-label="Back" title="Back">←</button><button class="btn" data-part="forwardBtn" type="button" aria-label="Forward" title="Forward">→</button><button class="btn" data-part="reloadBtn" type="button" aria-label="Reload" title="Reload">↻</button><a class="btn" data-part="browserHome" href="">Home</a><input aria-label="Search or enter a URL" data-part="urlInput" type="text" autocomplete="off" placeholder="Search or enter a URL"><button class="btn primary" type="submit" data-part="goBtn">Go</button><button class="btn" type="button" data-part="saveBookmark">Save</button><button class="btn" type="button" data-part="browserConnection" aria-expanded="false" >Connection</button></form>
 <div data-part="connectionPanel" hidden>
 <span>Wisp server</span>
 <select class="field" data-part="browserRelay" aria-label="Wisp server"></select>
@@ -9245,111 +9240,6 @@ function highlightSection(id){
 }
 function resolveSearch(s){s=s.trim();if(!s)return null;if(/^https?:[/][/]/i.test(s))return safeUrl(s);if(/^localhost(:\d+)?(\/|$)/i.test(s))return 'http:\/\/'+s;if(/^(?:[\w-]+\.)+[a-z]{2,}(:\d+)?(\/.*)?$/i.test(s))return safeUrl('https:\/\/'+s);return settings.engine+encodeURIComponent(s)}
 $('homeSearchForm').onsubmit=e=>{e.preventDefault();const u=resolveSearch($('homeSearch').value);if(u)navigate(u)};
-// Decide using navigation URLs only. Account form contents are never needed here.
-const goopYouTube = (() => {
-  const videoPattern = /^[A-Za-z0-9_-]{11}$/;
-  function url(value, base) {
-    try {
-      const target = new URL(value, base || undefined);
-      if (/^https?:$/.test(target.protocol) && !target.username && !target.password && !target.port) return target;
-    } catch {}
-    return null;
-  }
-  function isYouTube(value) {
-    const host = url(value)?.hostname;
-    return host === 'youtu.be' || host === 'youtube.com' || host?.endsWith('.youtube.com') || false;
-  }
-  function video(value) {
-    if (!isYouTube(value)) return '';
-    let u = url(value);
-    if (/^\/signin\/?$/.test(u.pathname)) {
-      const next = url(u.searchParams.get('next'), 'https://www.youtube.com');
-      if (next?.origin !== 'https://www.youtube.com' || next.pathname !== '/watch') return '';
-      u = next;
-    }
-    const parts = u.pathname.split('/');
-    let id = '';
-    if (u.hostname === 'youtu.be') id = parts[1];
-    else if (u.pathname === '/watch') id = u.searchParams.get('v');
-    else if (['shorts','live','embed'].includes(parts[1])) id = parts[2];
-    return videoPattern.test(id || '') ? id : '';
-  }
-  function isSignIn(value, from) {
-    const u = url(value, from);
-    if (!u) return false;
-    if (u.hostname === 'accounts.youtube.com') return /^\/(?:accounts\/)?(?:ServiceLogin|AccountChooser|signin|login)(?:\/|$)/i.test(u.pathname);
-    if (isYouTube(u.href)) return /^\/(?:signin|login)(?:\/|$)/i.test(u.pathname);
-    if (u.hostname !== 'accounts.google.com') return false;
-    const accountPage = u.pathname === '/' || /^\/(?:v[0-9]+\/)?(?:ServiceLogin|AccountChooser|InteractiveLogin|signin|login|o\/oauth2)(?:\/|$)/i.test(u.pathname);
-    if (!accountPage) return false;
-    return isYouTube(from) || u.searchParams.get('service') === 'youtube' || isYouTube(u.searchParams.get('continue'));
-  }
-  function official(id) {
-    const link = new URL('https://www.youtube.com/signin');
-    if (videoPattern.test(id || '')) link.searchParams.set('next', '/watch?v=' + id);
-    return link.href;
-  }
-
-  // NoSW renders the visited document in this frame. Its navigation hooks use
-  // the virtual page URL because the actual document can be an about:srcdoc.
-  function guard(frame, startingURL, handoff) {
-    let previous = startingURL(), attached;
-    function pageURL() {
-      try {
-        const w = frame.contentWindow;
-        return url(w?.__u22?.location?.href || w?.__u22$url)?.href || '';
-      } catch { return ''; }
-    }
-    function check(value) {
-      if (!value) return false;
-      if (!isSignIn(value, previous) && !isSignIn(value, pageURL())) return false;
-      handoff(video(pageURL()) || video(previous));
-      return true;
-    }
-    function attach() {
-      const current = pageURL();
-      if (check(current)) return;
-      if (current) previous = current;
-      let doc;
-      try { doc = frame.contentDocument; } catch { return; }
-      if (!doc || attached === doc) return;
-      attached = doc;
-      function intercept(event) {
-        let destination;
-        if (event.type === 'submit') destination = event.submitter?.getAttribute('formaction') || event.target.getAttribute('action');
-        else {
-          const link = event.composedPath().find(node => node.matches?.('a[href],area[href]'));
-          destination = link?.getAttribute('href');
-          if (!destination && link) destination = link.href;
-        }
-        if (!destination) return;
-        const base = pageURL() || previous;
-        const target = url(destination, base);
-        if (!target || !check(target.href)) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
-      for (const type of ['click','auxclick','submit']) doc.defaultView.addEventListener(type,intercept,true);
-    }
-    // Script-driven navigation in the rewritten page uses the shell's public loader.
-    // Stop sign-in documents here as well, including an unexpected redirect to sign-in.
-    const loader = frame.ownerDocument.defaultView.u22Loader;
-    if (typeof loader?.loadDocument === 'function') {
-      const load = loader.loadDocument.bind(loader);
-      const handled = () => ({kind:'none',status:204,finalUrl:'about:blank'});
-      loader.loadDocument = async (destination, options) => {
-        if (check(destination)) return handled();
-        const result = await load(destination, options);
-        return check(result?.finalUrl) ? handled() : result;
-      };
-    }
-    frame.addEventListener('load',attach);
-    attach();
-    return {check, remember(value){ if (value) previous = value; }};
-  }
-  return {isYouTube,video,isSignIn,official,guard};
-})();
-
 const tabs = [];
 const tabButtons = document.getElementById('webTabButtons');
 const pageContent = document.getElementById('goopPage');
@@ -9454,7 +9344,7 @@ function navigate(initialUrl, game=null) {
 const isolatedOrigin = 'https://mathscholar.s3.dualstack.us-east-1.amazonaws.com';
 const browserOrigin = location.origin === isolatedOrigin ? 'https://mathscholar.s3.amazonaws.com' : isolatedOrigin;
 const hostedCopy = new URL('/Goop.svg', browserOrigin);
-hostedCopy.searchParams.set('goop-runtime','yt-signin-1');
+hostedCopy.searchParams.set('goop-runtime','tabs-2');
 hostedCopy.hash = 'web-runtime-v1';
 let browserFrame = null, connected = false, loaderTimer = 0, pageTimer = 0, legacy = false;
 let navigationNumber = 0, awaitingFirstPage = false, effectiveTransport = settings.transport;
@@ -9463,33 +9353,7 @@ function controls() {
   $('backBtn').disabled = historyIndex <= 0;
   $('forwardBtn').disabled = historyIndex + 1 >= history.length;
 }
-const youtubeLogin = $('youtubeLogin');
-let lastVideo = '';
-function syncAddress(url) {
-  currentUrl = url; address.value = url; setTitle(tab, game?.name || new URL(url).hostname);
-  const onYouTube = goopYouTube.isYouTube(url);
-  lastVideo = onYouTube ? goopYouTube.video(url) : '';
-  youtubeLogin.hidden = !onYouTube;
-  youtubeLogin.href = goopYouTube.official(lastVideo);
-}
-function showYouTubeSignIn(video) {
-  const link = goopYouTube.official(video || lastVideo);
-  if (history[historyIndex] !== link) {
-    history.splice(historyIndex+1); history.push(link); historyIndex = history.length-1;
-  }
-  stopBrowser();
-  syncAddress(link); controls(); closeConnection();
-  youtubeLogin.hidden = true;
-  const panel = document.createElement('section');
-  panel.className = 'accountHandoff';
-  const heading = document.createElement('h2'); heading.textContent = 'Sign in to YouTube';
-  const info = document.createElement('p');
-  info.textContent = 'Continue in a new browser tab. Your signed-in YouTube session stays there.';
-  const open = document.createElement('a'); open.href = link; open.target = '_blank';
-  open.rel = 'noopener noreferrer'; open.textContent = 'Continue on YouTube';
-  panel.append(heading,info,open); $('browserStage').replaceChildren(panel);
-  webNotice(''); if (!pane.hidden) open.focus({preventScroll:true});
-}
+function syncAddress(url) { currentUrl = url; address.value = url; setTitle(tab, game?.name || new URL(url).hostname); }
 function stopBrowser() {
   clearTimeout(loaderTimer); clearTimeout(pageTimer);
   $('browserStage').replaceChildren(); browserFrame = null; connected = false; legacy = false;
@@ -9519,7 +9383,6 @@ function loadLegacy() {
   legacy = true;
   const target = new URL('/nosw.html',browserOrigin);
   const encode = value => btoa(String.fromCharCode(...new TextEncoder().encode(value))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  target.searchParams.set('goopRequest', String(navigationNumber));
   target.searchParams.set('go',encode(currentUrl));
   target.searchParams.set('w1',encode(wispAddress(settings.wisp,'epoxy')));
   appendFrame(target);
@@ -9533,8 +9396,6 @@ function sendAddress() {
   pageTimer = setTimeout(loadLegacy, 35000);
 }
 function loadPage(url) {
-  if (goopYouTube.isSignIn(url,currentUrl)) { showYouTubeSignIn(goopYouTube.video(url) || lastVideo); return; }
-  if (!browserFrame) $('browserStage').replaceChildren();
   lastError=''; syncAddress(url); controls(); navigationNumber++;
   if(!settings.preferProxy){stopBrowser();webNotice('Web browsing is turned off. Enable “Use NoSW for browser navigation” in Settings to continue.');return;}
   try {wispAddress(settings.wisp,legacy ? 'epoxy' : settings.transport);} catch(error){stopBrowser();webNotice(error.message);return;}
@@ -9554,18 +9415,13 @@ function loadPage(url) {
 function navigate(url) {
   const dest = safeUrl(url);
   if (!dest) { toast('Enter a valid web address'); return; }
-  if (goopYouTube.isSignIn(dest,currentUrl)) { showYouTubeSignIn(goopYouTube.video(dest) || lastVideo); return; }
   if (history[historyIndex] !== dest) { history.splice(historyIndex+1); history.push(dest); historyIndex = history.length-1; }
   loadPage(dest);
 }
 const onMessage = event=>{
-  if (!browserFrame || closed || event.source !== browserFrame.contentWindow || event.origin !== browserOrigin) return;
+  if (!browserFrame || closed || legacy || event.source !== browserFrame.contentWindow || event.origin !== browserOrigin) return;
   const m = event.data;
   if (!m || typeof m !== 'object') return;
-  if (m.kind === 'goop-youtube-signin' && m.serial === navigationNumber) {
-    showYouTubeSignIn(m.video); return;
-  }
-  if (legacy) return;
   if (m.kind === 'goop-browser-ready') {
     clearTimeout(loaderTimer);
     if (!Array.isArray(m.transports)) { loadLegacy(); return; }
@@ -9588,7 +9444,6 @@ const onMessage = event=>{
   }
   if (m.kind === 'goop-web-page') {
     const url=safeUrl(m.url); if(!url)return;
-    if (goopYouTube.isSignIn(url,currentUrl)) { showYouTubeSignIn(lastVideo); return; }
     clearTimeout(pageTimer);
     if (awaitingFirstPage) { history[historyIndex]=url; awaitingFirstPage=false; }
     else if(history[historyIndex]!==url){history.splice(historyIndex+1);history.push(url);historyIndex=history.length-1;}
