@@ -1,0 +1,17 @@
+.goop-cursor-halo {
+  position: fixed;
+  --halo-radius: 52px;
+  top: calc(0px - var(--halo-radius));
+  left: calc(0px - var(--halo-radius));
+  width: calc(2 * var(--halo-radius));
+  height: calc(2 * var(--halo-radius));
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0;
+  background: radial-gradient(circle, rgb(141 249 176 / 19%) 0%, rgb(141 249 176 / 10%) 48%, transparent 73%);
+}
+.goop-cursor-halo[data-visible] { opacity: 1; }
+@media (forced-colors: active) {
+  .goop-cursor-halo { display: none; }
+}

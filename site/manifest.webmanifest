@@ -1,0 +1,16 @@
+{
+  "name": "Goop",
+  "short_name": "Goop",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07110c",
+  "theme_color": "#07110c",
+  "icons": [
+    {
+      "src": "./assets/images/favicon.png",
+      "sizes": "128x120",
+      "type": "image/png"
+    }
+  ]
+}
