@@ -785,10 +785,12 @@ html body .goop-pfp{width:34px;height:34px;border:2px solid var(--line2)!importa
 
 /* ---------- Home ---------- */
 html body #goopPage .home{
-  width:min(1080px,calc(100% - clamp(18px,4vw,56px) - 20px))!important;margin:0 auto 0 clamp(18px,4vw,56px)!important;
+  width:min(1400px,calc(100% - 2 * clamp(18px,4vw,56px)))!important;margin:0 auto!important;
   padding:64px 0 90px!important;text-align:left!important;
 }
 .glowmark{display:none!important}
+@media(min-width:1600px){html body #goopPage .home h1.hero-title{font-size:clamp(52px,3.6vw,72px)!important}html body #goopPage .home .hero-quote{font-size:1.25rem}html body #goopPage .home .searchrow{width:min(860px,100%)}html body #goopPage .home .grid .tile{min-height:clamp(150px,11vw,210px)!important}}
+
 html body #goopPage .home h1.hero-title{
   font-size:clamp(32px,5vw,52px)!important;font-weight:800;letter-spacing:-.05em!important;line-height:1.04;
   margin:0 0 22px!important;text-align:left;text-shadow:none!important;color:var(--text);
@@ -885,7 +887,7 @@ html body #goopPage .home .bookmark:hover{background:var(--s2)!important;color:v
 
 /* ---------- Inner pages ---------- */
 html body #goopPage .panelview{
-  width:min(1080px,calc(100% - clamp(18px,4vw,56px) - 20px))!important;margin:44px auto 80px clamp(18px,4vw,56px)!important;
+  width:min(1400px,calc(100% - 2 * clamp(18px,4vw,56px)))!important;margin:44px auto 80px!important;
 }
 .viewhead h2{font-size:clamp(28px,4vw,40px)!important;font-weight:800!important;letter-spacing:-.05em!important;margin:14px 0 4px!important}
 html body #goopPage .viewhead{flex-direction:column;align-items:flex-start;gap:14px}
@@ -9270,6 +9272,22 @@ window.goopPrograms=Object.create(null);
 window.GOOP_BACKEND_URL ||= ['localhost','127.0.0.1','[::1]'].includes(location.hostname)
   ? location.origin : 'https://goop-gateway2.onrender.com';
 window.GOOP_BLOX_URL ||= 'https://goop-blox.onrender.com';
+// Render's free plan puts each service to sleep after 15 idle minutes and a cold
+// start takes about a minute. Wake the gateway and every service at once when Goop
+// opens, instead of one after another when someone first clicks Movies or Music.
+(function(){
+  const gateway=String(window.GOOP_BACKEND_URL||'').replace(/\/$/,'');
+  if(!/^https:\/\/[^/]+\.onrender\.com$/.test(gateway))return;
+  const targets=[gateway+'/api/status','https://goop-movies.onrender.com/','https://goop-music.onrender.com/','https://goop-mangaa.onrender.com/healthz'];
+  let last=0;
+  function wake(){
+    if(Date.now()-last<5*60*1000)return;
+    last=Date.now();
+    for(const url of targets)fetch(url,{mode:'no-cors',cache:'no-store',credentials:'omit'}).catch(()=>{});
+  }
+  wake();
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
+})();
 
 ;
 const playerAccount = (() => {
@@ -9971,7 +9989,7 @@ async function getGames(key){
     name:typeof (g?.name??g?.title)==='string'?String(g.name??g.title).trim():'',
     url:typeof g?.url==='string'?g.url.trim():'',
     img:typeof (g?.img??g?.image??g?.cover)==='string'?String(g.img??g.image??g.cover):''
-  })).filter(g=>g.name&&g.url);
+  })).filter(g=>g.name&&g.url&&!(key==='seraph'&&seraphMissing[g.url]&&!seraphMissing[g.url][g.name]));
 }
 
 // Catalogs store paths relative to a repository; the leading slash in their JSON
@@ -10014,8 +10032,13 @@ function gameFile(key, path) {
   return {key, file, root, cdn, raw, custom:customRoot && new URL(file, customRoot).href};
 }
 
+// Seraph lists these games under folders its repository does not have; UGS has working copies.
+const seraphMissing = {'/seraph/riddleschool/index.html':{'Riddle School':'clriddleschool','Riddle School 2':'clriddleschool2','Riddle School 3':'clriddleschool3','Riddle School 4':'clriddleschool445544444$$444$444','Riddle Transfer':'clriddletransfer','Riddle Transfer 2':'clriddletransfer2'},
+  '/seraph/btd/index.html':{'Btd':'clbloonsTD1','Btd 2':'clbloonsTD2','Btd 3':'clbloonsTD3','Btd 4':'clbloonsTD4'}};
 function catalogEntry(key,game) {
   let path = game.url;
+  const copy = key === 'seraph' && seraphMissing[path]?.[game.name];
+  if (copy) return gameFile('ugs','/ugs/'+copy+'.html');
   if (key === 'fourgames' && game.name === 'Age of War 2') path = 'Age of War 2.html';
   if (key === 'fourgames' && game.name === 'Basketball Bros') path = 'Basketball Bros.html';
   return gameFile(key,path);
@@ -10059,10 +10082,10 @@ async function gameDocument(source,signal,ancestors=[]) {
   let html, base, problem;
   for (const url of [source.custom,source.raw,source.cdn].filter(Boolean)) {
     try {
-      const res = await fetch(url,{signal:AbortSignal.any([signal,AbortSignal.timeout(15000)]),credentials:'omit'});
+      const res = await fetch(url,{signal:AbortSignal.any([signal,AbortSignal.timeout(45000)]),credentials:'omit'});
       if (!res.ok) throw Error('HTTP '+res.status);
       const text = await res.text();
-      if (text.length > 20_000_000) throw Error('Game exceeds 20 MB.');
+      if (text.length > 64_000_000) throw Error('Game exceeds 64 MB.');
       if (!/<(?:!doctype|html|head|body|script|style|div|canvas|iframe)\b/i.test(text) ||
           /<meta[^>]+(?:name|property)=["'](?:octolytics-host|og:site_name)["'][^>]+content=["'](?:github.com|GitHub)["']/i.test(text))
         throw Error('This source did not return a game file.');
