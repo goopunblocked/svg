@@ -9253,20 +9253,32 @@ window.GOOP_BACKEND_URL ||= ['localhost','127.0.0.1','[::1]'].includes(location.
   ? location.origin : 'https://goop-gateway2.onrender.com';
 window.GOOP_BLOX_URL ||= 'https://goop-blox.onrender.com';
 // Render's free plan puts each service to sleep after 15 idle minutes and a cold
-// start takes about a minute. Wake the gateway and every service at once when Goop
-// opens, instead of one after another when someone first clicks Movies or Music.
+// start takes about a minute. The free plan also has a monthly limit on running
+// hours for the whole workspace, so wake only what someone is about to use: the
+// gateway when Goop opens, and each service as soon as someone points at, taps
+// or opens its section (sidebar or home tile).
 (function(){
   const gateway=String(window.GOOP_BACKEND_URL||'').replace(/\/$/,'');
   if(!/^https:\/\/[^/]+\.onrender\.com$/.test(gateway))return;
-  const targets=[gateway+'/api/status','https://goop-movies.onrender.com/','https://goop-music.onrender.com/','https://goop-mangaa.onrender.com/healthz'];
-  let last=0;
-  function wake(){
-    if(Date.now()-last<5*60*1000)return;
-    last=Date.now();
-    for(const url of targets)fetch(url,{mode:'no-cors',cache:'no-store',credentials:'omit'}).catch(()=>{});
+  const services={movies:'https://goop-movies.onrender.com/',music:'https://goop-music.onrender.com/',
+    manga:'https://goop-mangaa.onrender.com/healthz',blox:String(window.GOOP_BLOX_URL||'https://goop-blox.onrender.com').replace(/\/?$/,'/')};
+  const last={};
+  function ping(name,url){
+    if(Date.now()-(last[name]||0)<5*60*1000)return;
+    last[name]=Date.now();
+    fetch(url,{mode:'no-cors',cache:'no-store',credentials:'omit'}).catch(()=>{});
   }
-  wake();
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake();});
+  function wake(section){
+    ping('gateway',gateway+'/health');
+    if(services[section])ping(section,services[section]);
+  }
+  window.goopWake=wake;
+  wake(location.hash.slice(1));
+  const sectionOf=el=>el?.closest?.('[data-goop-section]')?.dataset.goopSection;
+  for(const type of ['pointerover','focusin','pointerdown'])
+    document.addEventListener(type,e=>{const s=sectionOf(e.target);if(s)wake(s);},{capture:true,passive:true});
+  window.addEventListener('hashchange',()=>wake(location.hash.slice(1)));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake(location.hash.slice(1));});
 })();
 
 ;
@@ -11677,7 +11689,7 @@ function actionForm(body,caption,make){
 }
 function roomMenu(el,items,prefix,type){
   el.replaceChildren(...items.map(item=>{
-    const b=button(prefix+(item.name||item.label),()=>select({...item,type}));
+    const b=button(prefix+(item.name||item.label)+(item.staffOnly?' (mods)':''),()=>select({...item,type}));
     if(selection?.id===item.id)b.setAttribute('aria-current','page');return b;
   }));
 }
@@ -11687,12 +11699,20 @@ function renderNav(){
   roomMenu($('voiceRooms'),home.rooms.filter(r=>r.kind==='voice'),'','voice');
   roomMenu($('inbox'),home.dms,'@ ','dm');
 }
+// What the signed-in staff rank may do. Older gateways only send admin, which meant everything.
+function can(perm){return !!(user?.perms ? user.perms[perm] : user?.admin);}
+function applyStaffTools(){
+  $('adminTools').hidden=!user?.admin;
+  $('createRoom').hidden=!can('manage');$('manageRoles').hidden=!can('manage');
+  $('review').hidden=!can('reports');
+  const m=$('moderateMembers');if(m)m.hidden=!(can('timeout')||can('kick')||can('tempBan'));
+}
 function renderChannelAccess(){
   const isText=selection?.type==='text';
   const owner=isText && selection.lockOwner;
   const mine=owner && owner===user?.id;
   const canPost=!owner || (selection.canPost ?? (mine && !!user?.admin));
-  $('lockRoom').hidden=!isText || !user?.admin || (!!owner && !mine);
+  $('lockRoom').hidden=!isText || !can('manage') || (!!owner && !mine && (user?.staff||0)<5);
   $('lockRoom').textContent='Channel settings';
   $('lockStatus').hidden=!owner;
   if(owner){
@@ -11717,7 +11737,7 @@ function select(next){
 }
 async function reloadHome(){
   const who=sessionVersion,h=await api('home');if(who!==sessionVersion || !token)return;
-  home=h;user=h.user;user.admin=!!visit && !!user.admin;if(!user.admin)visit='';$('self').textContent='@'+user.handle;$('adminTools').hidden=!user.admin;
+  home=h;user=h.user;user.admin=!!visit && !!user.admin;if(!user.admin)visit='';$('self').textContent='@'+user.handle+(user.admin&&user.rank?' · '+user.rank:'');applyStaffTools();
   if(!selection || (selection.type==='dm'&&!home.dms.some(d=>d.id===selection.id))){
     select({...home.rooms.find(r=>r.id==='general'),type:'text'});
   }else if(selection.type==='text'){
@@ -11739,7 +11759,7 @@ async function refreshMessages(){
       for(const role of m.roles||[])row.append(node('span',role,'roleBadge'));
       row.append(time);
       if(m.uid!==user.id){row.append(button('Report',async()=>{await api('report',{room,message:m.id});feedback('Report sent to the channel admins.');}));}
-      if(m.uid===user.id || user.admin){
+      if(m.uid===user.id || can('deleteAny')){
         // Two clicks, because a sandboxed page can't show a confirm() box.
         const del=button('Delete',async()=>{
           if(del.dataset.armed!=='1'){del.dataset.armed='1';del.textContent='Click again to delete';setTimeout(()=>{if(del.isConnected){del.dataset.armed='';del.textContent='Delete';}},4000);return;}
@@ -11806,8 +11826,9 @@ $('createRoom').onclick=()=>{
     const name=field(f,'Channel name');name.required=true;name.maxLength=32;
     const kind=field(f,'Channel type','select');kind.add(new Option('Text','text'));kind.add(new Option('Voice','voice'));
     const lock=field(f,'Only I can post');lock.type='checkbox';lock.parentElement.className='lockChoice';
+    const staffOnly=field(f,'Moderators only (hidden from everyone else)');staffOnly.type='checkbox';staffOnly.parentElement.className='lockChoice';
     kind.onchange=()=>{lock.parentElement.hidden=kind.value!=='text';};
-    return async()=>{const r=await api('rooms',{name:name.value,kind:kind.value,locked:kind.value==='text' && lock.checked});await reloadHome();
+    return async()=>{const r=await api('rooms',{name:name.value,kind:kind.value,locked:kind.value==='text' && lock.checked,staffOnly:staffOnly.checked});await reloadHome();
       $('tools').close();const item=home.rooms.find(x=>x.id===r.id);select({...item,type:item.kind});};
   });
 };
@@ -11832,9 +11853,11 @@ async function channelSettings(){
     if(!roles.length)box.append(node('p','No roles yet. Create one in Manage roles first.','hint'));
     f.append(box);
     const sync=()=>{box.hidden=who.value!=='limited';};who.onchange=sync;sync();
+    const staffOnly=field(f,'Moderators only (hidden from everyone else)');staffOnly.type='checkbox';
+    staffOnly.parentElement.className='lockChoice';staffOnly.checked=!!room.staffOnly;
     return async()=>{
       const limited=who.value==='limited';
-      await api('channel-settings',{room:room.id,locked:limited,roles:limited?picks.filter(c=>c.checked).map(c=>c.value):[]});
+      await api('channel-settings',{room:room.id,locked:limited,staffOnly:staffOnly.checked,roles:limited?picks.filter(c=>c.checked).map(c=>c.value):[]});
       await reloadHome();$('tools').close();feedback('Channel settings saved.');
     };
   });
@@ -11847,13 +11870,20 @@ async function moderateMembers(target){
     const who=field(f,'Username');who.maxLength=24;who.autocomplete='off';
     if(target){who.value=target.name;who.disabled=true;}else who.required=true;
     const act=field(f,'Action','select');
-    for(const [label,value] of [['Mute for 1 hour','60'],['Mute for 24 hours','1440'],['Mute for 7 days','10080'],['Mute permanently','forever'],['Unmute','unmute'],
-      ['Ban permanently','ban'],['Ban and delete all their messages','purge'],['Unban','unban']])act.add(new Option(label,value));
+    const choices=[
+      ['timeout','Timeout for 1 hour',{action:'mute',minutes:60}],['timeout','Timeout for 24 hours',{action:'mute',minutes:1440}],
+      ['timeout','Timeout for 7 days',{action:'mute',minutes:10080}],['timeout','Timeout for 28 days',{action:'mute',minutes:40320}],
+      ['timeout','Remove timeout',{action:'unmute'}],
+      ['kick','Kick (signs them out)',{action:'kick'}],
+      ['tempBan','Ban for 1 day',{action:'ban',days:1}],['tempBan','Ban for 7 days',{action:'ban',days:7}],['tempBan','Ban for 30 days',{action:'ban',days:30}],
+      ['permBan','Ban permanently',{action:'ban'}],['permBan','Ban permanently and delete all their messages',{action:'ban',purge:true}],
+      ['permBan','Mute permanently',{action:'mute',minutes:'forever'}],
+      ['tempBan','Unban',{action:'unban'}],
+    ].filter(([perm])=>can(perm));
+    choices.forEach(([,label],i)=>act.add(new Option(label,String(i))));
     return async()=>{
-      const v=act.value;
       const ident=target?{target:target.id}:{handle:who.value.trim().replace(/^@/,'')};
-      const change=v==='unmute'||v==='unban'?{action:v}:v==='ban'?{action:'ban'}:v==='purge'?{action:'ban',purge:true}
-        :{action:'mute',minutes:v==='forever'?'forever':Number(v)};
+      const change=choices[Number(act.value)][2];
       const result=await api('moderate-member',{...ident,...change});
       messageKey='';void refreshMessages();await drawLists();feedback(result.message);
     };
@@ -11869,9 +11899,11 @@ async function moderateMembers(target){
       for(const p of rows){const row=node('div',undefined,'report');make(row,p);lists.append(row);}
     };
     lists.replaceChildren();
-    section('Banned',data.banned,'Nobody is banned.',(row,p)=>row.append(node('p',name(p)),
-      button('Unban',async()=>{const r=await api('moderate-member',{target:p.id,action:'unban'});await drawLists();feedback(r.message);})));
-    section('Muted',data.muted,'Nobody is muted.',(row,p)=>row.append(
+    section('Banned',data.banned,'Nobody is banned.',(row,p)=>{
+      row.append(node('p',name(p)+' · '+(p.until?'until '+new Date(p.until).toLocaleString():'permanently')));
+      if(can(p.until?'tempBan':'permBan'))row.append(button('Unban',async()=>{const r=await api('moderate-member',{target:p.id,action:'unban'});await drawLists();feedback(r.message);}));
+    });
+    section('Timed out',data.muted,'Nobody is timed out.',(row,p)=>row.append(
       node('p',name(p)+' · '+(p.muted>=253402300799000?'permanently':'until '+new Date(p.muted).toLocaleString())),
       button('Unmute',async()=>{const r=await api('moderate-member',{target:p.id,action:'unmute'});await drawLists();feedback(r.message);})));
   }
@@ -11939,8 +11971,13 @@ async function reports(){
   for(const r of data.reports){
     const row=node('div',undefined,'report');row.append(node('p',r.detail));
     const commands=[['Dismiss','dismiss']];
-    if(r.message!=='voice')commands.push(['Remove message','remove']);
-    if(!r.target.startsWith('legacy:'))commands.push(['Mute for 24 hours','mute'],['Mute for 7 days','mute-week'],['Ban permanently','ban']);
+    if(r.message!=='voice' && can('deleteAny'))commands.push(['Remove message','remove']);
+    if(!r.target.startsWith('legacy:')){
+      if(can('timeout'))commands.push(['Timeout 24 hours','mute'],['Timeout 7 days','mute-week']);
+      if(can('kick'))commands.push(['Kick','kick']);
+      if(can('tempBan'))commands.push(['Ban 7 days','ban-week']);
+      if(can('permBan'))commands.push(['Ban permanently','ban']);
+    }
     for(const [label,decision] of commands)row.append(button(label,async()=>{await api('moderate',{report:r.id,decision});await reports();}));
     wrap.append(row);
   }
