@@ -11711,15 +11711,18 @@ function renderChannelAccess(){
   const isText=selection?.type==='text';
   const owner=isText && selection.lockOwner;
   const mine=owner && owner===user?.id;
+  const canPost=!owner || (selection.canPost ?? (mine && !!user?.admin));
   $('lockRoom').hidden=!isText || !user?.admin || (!!owner && !mine);
-  $('lockRoom').textContent=owner?'Unlock channel':'Lock channel';
+  $('lockRoom').textContent='Channel settings';
   $('lockStatus').hidden=!owner;
   if(owner){
-    $('lockStatus').textContent=mine
-      ? (user.admin?'Only you can post here.':'Read-only. Sign in with admin access to post here.')
-      : 'Read-only. Only @'+selection.lockHandle+' can post here.';
+    const roles=(selection.postRoles||[]).map(r=>r.name);
+    const also=roles.length?' and members with the '+roles.join(', ')+' role'+(roles.length>1?'s':''):'';
+    $('lockStatus').textContent=canPost
+      ? (mine && user?.admin?'Only you'+also+' can post here.':'Your role lets you post in this channel.')
+      : mine?'Read-only. Sign in with admin access to post here.':'Read-only. Only @'+selection.lockHandle+also+' can post here.';
   }
-  $('compose').hidden=selection?.type==='voice' || !!owner && !(mine && user?.admin);
+  $('compose').hidden=selection?.type==='voice' || !canPost;
 }
 function select(next){
   if(selection?.id===next.id)return;
@@ -11756,6 +11759,16 @@ async function refreshMessages(){
       for(const role of m.roles||[])row.append(node('span',role,'roleBadge'));
       row.append(time);
       if(m.uid!==user.id){row.append(button('Report',async()=>{await api('report',{room,message:m.id});feedback('Report sent to the channel admins.');}));}
+      if(m.uid===user.id || user.admin){
+        // Two clicks, because a sandboxed page can't show a confirm() box.
+        const del=button('Delete',async()=>{
+          if(del.dataset.armed!=='1'){del.dataset.armed='1';del.textContent='Click again to delete';setTimeout(()=>{if(del.isConnected){del.dataset.armed='';del.textContent='Delete';}},4000);return;}
+          await api('delete-message',{room,message:m.id});messageKey='';await refreshMessages();
+        });
+        row.append(del);
+      }
+      if(user.admin && m.uid!==user.id && !String(m.uid).startsWith('legacy:'))
+        row.append(button('Moderate',()=>moderateMembers({id:m.uid,name:m.handle?'@'+m.handle:m.label})));
       if(m.invite){
         const card=node('div',undefined,'gameActions');card.append(node('strong',m.invite.name),button(m.invite.roomUrl?'Join game':'Play game',()=>window.goopOpenInvite(m.invite)));row.append(card);
       }else row.append(node('p',m.text));return row;
@@ -11818,16 +11831,77 @@ $('createRoom').onclick=()=>{
       $('tools').close();const item=home.rooms.find(x=>x.id===r.id);select({...item,type:item.kind});};
   });
 };
-$('lockRoom').onclick=async()=>{
+async function channelSettings(){
   if(selection?.type!=='text' || !user?.admin)return;
-  const control=$('lockRoom');
-  control.disabled=true;
-  try{
-    await api('room-lock',{room:selection.id,locked:!selection.lockOwner});
-    await reloadHome();
-  }catch(err){feedback(err.message);}
-  finally{control.disabled=false;}
-};
+  const room=selection;
+  const wrap=dialog('Channel settings');
+  const {roles}=await api('roles');
+  if(!$('tools').open || $('toolTitle').textContent!=='Channel settings')return;
+  wrap.append(node('p','# '+room.name,'hint'));
+  actionForm(wrap,'Save settings',f=>{
+    const who=field(f,'Who can post','select');
+    who.add(new Option('Everyone','everyone'));
+    who.add(new Option('Only me and the roles I pick','limited'));
+    who.value=room.lockOwner?'limited':'everyone';
+    const box=node('fieldset');box.append(node('legend','Roles that can post'));
+    const picks=roles.map(role=>{
+      const label=node('label',undefined,'lockChoice'),check=node('input');
+      check.type='checkbox';check.value=role.id;check.checked=(room.postRoles||[]).some(p=>p.id===role.id);
+      label.append(check,document.createTextNode(' '+role.name));box.append(label);return check;
+    });
+    if(!roles.length)box.append(node('p','No roles yet. Create one in Manage roles first.','hint'));
+    f.append(box);
+    const sync=()=>{box.hidden=who.value!=='limited';};who.onchange=sync;sync();
+    return async()=>{
+      const limited=who.value==='limited';
+      await api('channel-settings',{room:room.id,locked:limited,roles:limited?picks.filter(c=>c.checked).map(c=>c.value):[]});
+      await reloadHome();$('tools').close();feedback('Channel settings saved.');
+    };
+  });
+}
+$('lockRoom').onclick=()=>channelSettings().catch(err=>feedback(err.message));
+async function moderateMembers(target){
+  const title='Moderate members';
+  const wrap=dialog(title);
+  actionForm(wrap,'Apply',f=>{
+    const who=field(f,'Username');who.maxLength=24;who.autocomplete='off';
+    if(target){who.value=target.name;who.disabled=true;}else who.required=true;
+    const act=field(f,'Action','select');
+    for(const [label,value] of [['Mute for 1 hour','60'],['Mute for 24 hours','1440'],['Mute for 7 days','10080'],['Mute permanently','forever'],['Unmute','unmute'],
+      ['Ban permanently','ban'],['Ban and delete all their messages','purge'],['Unban','unban']])act.add(new Option(label,value));
+    return async()=>{
+      const v=act.value;
+      const ident=target?{target:target.id}:{handle:who.value.trim().replace(/^@/,'')};
+      const change=v==='unmute'||v==='unban'?{action:v}:v==='ban'?{action:'ban'}:v==='purge'?{action:'ban',purge:true}
+        :{action:'mute',minutes:v==='forever'?'forever':Number(v)};
+      const result=await api('moderate-member',{...ident,...change});
+      messageKey='';void refreshMessages();await drawLists();feedback(result.message);
+    };
+  });
+  const lists=node('div');wrap.append(lists);
+  async function drawLists(){
+    const data=await api('moderation');
+    if(!$('tools').open || $('toolTitle').textContent!==title)return;
+    const name=p=>p.handle?'@'+p.handle:p.label;
+    const section=(heading,rows,empty,make)=>{
+      lists.append(node('strong',heading));
+      if(!rows.length)lists.append(node('p',empty,'hint'));
+      for(const p of rows){const row=node('div',undefined,'report');make(row,p);lists.append(row);}
+    };
+    lists.replaceChildren();
+    section('Banned',data.banned,'Nobody is banned.',(row,p)=>row.append(node('p',name(p)),
+      button('Unban',async()=>{const r=await api('moderate-member',{target:p.id,action:'unban'});await drawLists();feedback(r.message);})));
+    section('Muted',data.muted,'Nobody is muted.',(row,p)=>row.append(
+      node('p',name(p)+' · '+(p.muted>=253402300799000?'permanently':'until '+new Date(p.muted).toLocaleString())),
+      button('Unmute',async()=>{const r=await api('moderate-member',{target:p.id,action:'unmute'});await drawLists();feedback(r.message);})));
+  }
+  await drawLists();
+}
+{
+  const b=node('button','Moderate members');b.id='moderateMembers';b.type='button';
+  b.onclick=()=>moderateMembers().catch(err=>feedback(err.message));
+  $('adminTools').insertBefore(b,$('review'));
+}
 async function manageRoles(){
   const wrap=dialog('Manage roles');
   const {roles}=await api('roles');
@@ -11886,7 +11960,7 @@ async function reports(){
     const row=node('div',undefined,'report');row.append(node('p',r.detail));
     const commands=[['Dismiss','dismiss']];
     if(r.message!=='voice')commands.push(['Remove message','remove']);
-    if(!r.target.startsWith('legacy:'))commands.push(['Mute for 24 hours','mute']);
+    if(!r.target.startsWith('legacy:'))commands.push(['Mute for 24 hours','mute'],['Mute for 7 days','mute-week'],['Ban permanently','ban']);
     for(const [label,decision] of commands)row.append(button(label,async()=>{await api('moderate',{report:r.id,decision});await reports();}));
     wrap.append(row);
   }
